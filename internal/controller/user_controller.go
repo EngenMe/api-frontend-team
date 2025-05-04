@@ -1,0 +1,50 @@
+package controller
+
+import (
+	"net/http"
+
+	"github.com/EngenMe/api-frontend-team/internal/service"
+	"github.com/gin-gonic/gin"
+)
+
+type UserController struct {
+	service service.UserService
+}
+
+func NewUserController(service service.UserService) *UserController {
+	return &UserController{service}
+}
+
+func (c *UserController) Register(ctx *gin.Context) {
+	var input struct {
+		Email    string `json:"email" binding:"required,email"`
+		Password string `json:"password" binding:"required"`
+	}
+
+	if err := ctx.ShouldBindJSON(&input); err != nil {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
+		return
+	}
+
+	if err := c.service.Register(input.Email, input.Password); err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
+		return
+	}
+
+	ctx.JSON(http.StatusCreated, gin.H{"message": "User registered"})
+}
+
+func (c *UserController) GetUser(ctx *gin.Context) {
+	email := ctx.Param("email")
+	user, err := c.service.GetUserByEmail(email)
+	if err != nil {
+		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+		return
+	}
+	ctx.JSON(http.StatusOK, user)
+}
+
+func (c *UserController) SetupRoutes(router *gin.Engine) {
+	router.POST("/users", c.Register)
+	router.GET("/users/:email", c.GetUser)
+}
