@@ -10,9 +10,12 @@ import (
 	"errors"
 )
 
+// TODO: Move register and login to auth_service, create interface for that DI principle
 type userService struct {
 	repo repository.UserRepository
 }
+
+//TODO: Refactoring: Move hash password and check password hash to pkg/utils/password_helper.go or something like that
 
 func HashPassword(password string) (string, error) {
 	bytes, err := bcrypt.GenerateFromPassword([]byte(password), 14)
