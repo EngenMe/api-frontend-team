@@ -2,6 +2,7 @@ package main
 
 import (
 	"log"
+	"os"
 
 	"github.com/EngenMe/api-frontend-team/internal/controller"
 	"github.com/EngenMe/api-frontend-team/internal/repository"
@@ -20,11 +21,14 @@ func main() {
 
 	userRepo := repository.NewUserRepository(dbConn)
 	userService := service.NewUserService(userRepo)
+	authService := service.NewAuthService(userRepo)
+	authController := controller.NewAuthController(authService)
 	userController := controller.NewUserController(userService)
 
 	router := gin.Default()
-	userController.SetupRoutes(router)
+	apiV1 := router.Group("/api/v1")
+	userController.SetupUserRoutes(apiV1)
+	authController.SetupAuthRoutes(apiV1)
 
-	//TODO: change port to be got from env
-	router.Run(":8080")
+	router.Run(os.Getenv("PORT"))
 }
