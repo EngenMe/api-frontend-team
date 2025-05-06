@@ -7,7 +7,6 @@ import (
 	"github.com/EngenMe/api-frontend-team/internal/repository"
 )
 
-// TODO: Move register and login to auth_service, create interface for that DI principle
 type userService struct {
 	repo repository.UserRepository
 }
