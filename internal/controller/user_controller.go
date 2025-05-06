@@ -23,11 +23,10 @@ func (c *UserController) GetUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	
+
 	ctx.JSON(
-		http.StatusOK, dto.UserDTO{
-			Email:    user.Email,
-			Password: user.Password,
+		http.StatusOK, dto.GetUserResponse{
+			Email: user.Email,
 		},
 	)
 }

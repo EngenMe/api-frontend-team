@@ -19,7 +19,7 @@ func NewAuthService(repo repository.UserRepository) AuthService {
 	return &authService{repo}
 }
 
-func (s *authService) Login(dto *dto.UserDTO) (string, error) {
+func (s *authService) Login(dto *dto.LoginRequest) (string, error) {
 	// Check if user exists
 	user, err := s.repo.FindByEmail(dto.Email)
 	if err != nil {
@@ -40,7 +40,7 @@ func (s *authService) Login(dto *dto.UserDTO) (string, error) {
 	return token, nil
 }
 
-func (s *authService) Register(dto *dto.UserDTO) error {
+func (s *authService) Register(dto *dto.RegisterRequest) error {
 	// Check if user already exists
 	existingUser, err := s.repo.FindByEmail(dto.Email)
 	if err == nil && existingUser != nil {
