@@ -25,3 +25,28 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 	}
 	return &user, nil
 }
+
+func (r *userRepository) GetById(id string) (*model.User, error) {
+	var user model.User
+	err := r.db.First(&user, id).Error
+	if err != nil {
+		return nil, err
+	}
+	return &user, nil
+}
+
+func (r *userRepository) UpdateUser(id string, user *model.User) (*model.User, error) {
+	err := r.db.Model(&model.User{}).Where("id = ?", id).Updates(user).Error
+	if err != nil {
+		return nil, err
+	}
+	return user, nil
+}
+
+func (r *userRepository) DeleteUser(id string) error {
+	err := r.db.Delete(&model.User{}, id).Error
+	if err != nil {
+		return err
+	}
+	return nil
+}

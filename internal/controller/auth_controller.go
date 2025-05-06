@@ -50,6 +50,6 @@ func (c *AuthController) Register(ctx *gin.Context) {
 }
 
 func (c *AuthController) SetupAuthRoutes(router *gin.RouterGroup) {
-	router.POST("/auth/register", c.Register)
-	router.POST("/auth/login", c.Login)
+	router.POST("/register", c.Register)
+	router.POST("/login", c.Login)
 }
