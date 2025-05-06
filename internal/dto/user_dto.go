@@ -13,3 +13,12 @@ type LoginRequest struct {
 type GetUserResponse struct {
 	Email string
 }
+
+type UpdateUserRequest struct {
+	Email    string `json:"email" binding:"required,email"`
+	Password string `json:"password"`
+}
+
+type UpdateUserResponse struct {
+	Email string `json:"email"`
+}

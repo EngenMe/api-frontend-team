@@ -5,6 +5,7 @@ import (
 	"os"
 
 	"github.com/EngenMe/api-frontend-team/internal/controller"
+	"github.com/EngenMe/api-frontend-team/internal/middleware"
 	"github.com/EngenMe/api-frontend-team/internal/repository"
 	"github.com/EngenMe/api-frontend-team/internal/service"
 	"github.com/EngenMe/api-frontend-team/pkg/db"
@@ -26,9 +27,12 @@ func main() {
 	userController := controller.NewUserController(userService)
 
 	router := gin.Default()
-	apiV1 := router.Group("/api/v1")
-	userController.SetupUserRoutes(apiV1)
-	authController.SetupAuthRoutes(apiV1)
+
+	apiV1Auth := router.Group("/auth/api/v1")
+	apiV1User := router.Group("/user/api/v1")
+	apiV1User.Use(middleware.AuthenticationMiddleware())
+	userController.SetupUserRoutes(apiV1User)
+	authController.SetupAuthRoutes(apiV1Auth)
 
 	router.Run(os.Getenv("PORT"))
 }

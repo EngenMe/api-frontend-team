@@ -1,10 +1,13 @@
 package service
 
 import (
+	"errors"
 	"regexp"
 
+	"github.com/EngenMe/api-frontend-team/internal/dto"
 	"github.com/EngenMe/api-frontend-team/internal/model"
 	"github.com/EngenMe/api-frontend-team/internal/repository"
+	"github.com/EngenMe/api-frontend-team/pkg/utils"
 )
 
 type userService struct {
@@ -20,6 +23,54 @@ func NewUserService(repo repository.UserRepository) UserService {
 	return &userService{repo}
 }
 
-func (s *userService) GetUserByEmail(email string) (*model.User, error) {
-	return s.repo.FindByEmail(email)
+func (s *userService) GetUserByEmail(email string) (dto.GetUserResponse, error) {
+	user, err := s.repo.FindByEmail(email)
+	if err != nil {
+		return dto.GetUserResponse{}, err
+	}
+	if user == nil {
+		return dto.GetUserResponse{}, errors.New("user not found")
+	}
+	return dto.GetUserResponse{
+		Email: user.Email,
+	}, nil
+}
+
+func (s *userService) GetUserById(id string) (dto.GetUserResponse, error) {
+	user, err := s.repo.GetById(id)
+	if err != nil {
+		return dto.GetUserResponse{}, err
+	}
+	if user == nil {
+		return dto.GetUserResponse{}, errors.New("user not found")
+	}
+	return dto.GetUserResponse{
+		Email: user.Email,
+	}, nil
+}
+func (s *userService) DeleteUser(id string) error {
+	return s.repo.DeleteUser(id)
+}
+func (s *userService) UpdateUser(id string, userDTO dto.UpdateUserRequest) (dto.UpdateUserResponse, error) {
+	if !isEmailValid(userDTO.Email) {
+		return dto.UpdateUserResponse{}, errors.New("invalid email format")
+	}
+	if userDTO.Password != "" {
+		hPassword, err := utils.HashPassword(userDTO.Password)
+		if err != nil {
+			return dto.UpdateUserResponse{}, err
+		}
+		userDTO.Password = hPassword
+	}
+	user := &model.User{
+		Email:    userDTO.Email,
+		Password: userDTO.Password,
+	}
+
+	UpdateUser, err := s.repo.UpdateUser(id, user)
+	if err != nil {
+		return dto.UpdateUserResponse{}, err
+	}
+
+	return dto.UpdateUserResponse{Email: UpdateUser.Email}, nil
 }
