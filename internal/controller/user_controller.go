@@ -1,6 +1,7 @@
 package controller
 
 import (
+	"github.com/EngenMe/api-frontend-team/internal/dto"
 	"net/http"
 
 	"github.com/EngenMe/api-frontend-team/internal/service"
@@ -22,8 +23,13 @@ func (c *UserController) GetUser(ctx *gin.Context) {
 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
 		return
 	}
-	// TODO: use user response dto instead of user object
-	ctx.JSON(http.StatusOK, user)
+	
+	ctx.JSON(
+		http.StatusOK, dto.UserDTO{
+			Email:    user.Email,
+			Password: user.Password,
+		},
+	)
 }
 
 func (c *UserController) SetupUserRoutes(router *gin.RouterGroup) {
