@@ -1,6 +1,7 @@
 package middleware
 
 import (
+	"fmt"
 	"net/http"
 	"strings"
 
@@ -18,8 +19,9 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 		}
 
 		tokenParts := strings.Split(tokenString, " ")
+		fmt.Println(tokenParts)
 		if len(tokenParts) != 2 || tokenParts[0] != "Bearer" {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authentication token"})
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authentication token 1"})
 			ctx.Abort()
 			return
 		}
@@ -28,7 +30,7 @@ func AuthenticationMiddleware() gin.HandlerFunc {
 
 		claims, err := jwt.ParseToken(tokenString)
 		if err != nil {
-			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authentication token"})
+			ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid authentication token 2"})
 			ctx.Abort()
 			return
 		}
