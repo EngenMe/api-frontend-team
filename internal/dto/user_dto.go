@@ -2,12 +2,12 @@ package dto
 
 type RegisterRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,password"`
+	Password string `json:"password" gorm:"not null"`
 }
 
 type LoginRequest struct {
 	Email    string `json:"email" binding:"required,email"`
-	Password string `json:"password" binding:"required,password"`
+	Password string `json:"password" gorm:"not null"`
 }
 
 type GetUserResponse struct {

@@ -28,8 +28,8 @@ func main() {
 
 	router := gin.Default()
 
-	apiV1Auth := router.Group("/auth/api/v1")
-	apiV1User := router.Group("/user/api/v1")
+	apiV1Auth := router.Group("/api/v1/auth")
+	apiV1User := router.Group("/api/v1/user")
 	apiV1User.Use(middleware.AuthenticationMiddleware())
 	userController.SetupUserRoutes(apiV1User)
 	authController.SetupAuthRoutes(apiV1Auth)

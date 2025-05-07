@@ -49,6 +49,10 @@ func (s *userService) GetUserById(id string) (dto.GetUserResponse, error) {
 	}, nil
 }
 func (s *userService) DeleteUser(id string) error {
+	_, err := s.repo.GetById(id)
+	if err != nil {
+		return err
+	}
 	return s.repo.DeleteUser(id)
 }
 func (s *userService) UpdateUser(id string, userDTO dto.UpdateUserRequest) (dto.UpdateUserResponse, error) {
