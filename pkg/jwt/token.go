@@ -21,7 +21,7 @@ type RefreshTokenClaims struct {
 
 // GenerateToken generates a JWT token with the given user ID & email and expiration time.
 
-func GenerateToken(userID, email string) (string, error) {
+func GenerateToken(userID, email string) (idTokenRes string, idExpRes string, err error) {
 	// Create a new JWT token
 	idExp := time.Now().Add(time.Minute * 15) // Token expires in 15 minates
 	idClaims := TokenClaims{
@@ -35,9 +35,9 @@ func GenerateToken(userID, email string) (string, error) {
 	idToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, idClaims).SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return idToken, nil
+	return idToken, idExp.String(), nil
 }
 
 // parseToken parses the JWT token and returns the claims.
@@ -57,7 +57,7 @@ func ParseToken(tokenString string) (jwt.MapClaims, error) {
 	return nil, fmt.Errorf("invalid token")
 }
 
-func GenerateRefreshToken(userID string) (string, error) {
+func GenerateRefreshToken(userID string) (idRefreshTokenRes string, refreshExpRes string, err error) {
 	rExp := time.Now().Add(72 * time.Hour) // Token expires in 3 days
 	idRClaims := RefreshTokenClaims{
 		UserID: userID,
@@ -69,7 +69,7 @@ func GenerateRefreshToken(userID string) (string, error) {
 	idRToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, idRClaims).SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 
 	if err != nil {
-		return "", err
+		return "", "", err
 	}
-	return idRToken, nil
+	return idRToken, rExp.String(), nil
 }
