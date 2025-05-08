@@ -8,24 +8,36 @@ import (
 	"github.com/golang-jwt/jwt/v5"
 )
 
+type TokenClaims struct {
+	UserID string `json:"user_id"`
+	Email  string
+	jwt.RegisteredClaims
+}
+
+type RefreshTokenClaims struct {
+	UserID string `json:"user_id"`
+	jwt.RegisteredClaims
+}
+
 // GenerateToken generates a JWT token with the given user ID & email and expiration time.
 
 func GenerateToken(userID, email string) (string, error) {
 	// Create a new JWT token
-	token := jwt.New(jwt.SigningMethodHS256)
+	idExp := time.Now().Add(time.Minute * 15) // Token expires in 15 minates
+	idClaims := TokenClaims{
+		UserID: userID,
+		Email:  email,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(idExp),
+		},
+	}
 
-	// Set the claims for the token
-	claims := token.Claims.(jwt.MapClaims)
-	claims["user_id"] = userID
-	claims["email"] = email
-	claims["exp"] = time.Now().Add(time.Hour * 24).Unix() // Token expires in 24 hours
+	idToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, idClaims).SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 
-	tokenString, err := token.SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
 	if err != nil {
 		return "", err
 	}
-
-	return tokenString, nil
+	return idToken, nil
 }
 
 // parseToken parses the JWT token and returns the claims.
@@ -43,4 +55,21 @@ func ParseToken(tokenString string) (jwt.MapClaims, error) {
 	}
 
 	return nil, fmt.Errorf("invalid token")
+}
+
+func GenerateRefreshToken(userID string) (string, error) {
+	rExp := time.Now().Add(72 * time.Hour) // Token expires in 3 days
+	idRClaims := RefreshTokenClaims{
+		UserID: userID,
+		RegisteredClaims: jwt.RegisteredClaims{
+			ExpiresAt: jwt.NewNumericDate(rExp),
+		},
+	}
+
+	idRToken, err := jwt.NewWithClaims(jwt.SigningMethodHS256, idRClaims).SignedString([]byte(os.Getenv("JWT_SECRET_KEY")))
+
+	if err != nil {
+		return "", err
+	}
+	return idRToken, nil
 }

@@ -21,8 +21,9 @@ func main() {
 	dbConn := db.InitDB()
 
 	userRepo := repository.NewUserRepository(dbConn)
+	tokenRepo := repository.NewTokenRepo(dbConn)
 	userService := service.NewUserService(userRepo)
-	authService := service.NewAuthService(userRepo)
+	authService := service.NewAuthService(userRepo, tokenRepo)
 	authController := controller.NewAuthController(authService)
 	userController := controller.NewUserController(userService)
 
