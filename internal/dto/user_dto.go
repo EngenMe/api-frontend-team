@@ -22,3 +22,12 @@ type UpdateUserRequest struct {
 type UpdateUserResponse struct {
 	Email string `json:"email"`
 }
+
+type TokenPair struct {
+	Token   string `json:"token"`
+	Expires string `json:"expires"`
+}
+type RefreshTokenResonse struct {
+	Access  TokenPair `json:"access"`
+	Refresh TokenPair `json:"refresh"`
+}
