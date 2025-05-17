@@ -15,7 +15,7 @@ type AuthController struct {
 	service service.AuthService
 }
 type RefreshTokenRequest struct {
-	RefreshToken string `json:"refresh_token"`
+	RefreshToken string `json:"refreshToken"`
 }
 
 func NewAuthController(service service.AuthService) *AuthController {
@@ -42,13 +42,13 @@ func (c *AuthController) Login(ctx *gin.Context) {
 		return
 	}
 
-	refresh_token, err := c.service.Login(&userDTO)
+	authUserResponse, err := c.service.Login(&userDTO)
 	if err != nil {
 		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Invalid credentials"})
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"tokens": refresh_token})
+	ctx.JSON(http.StatusOK, gin.H{"user": authUserResponse.User, "tokens": authUserResponse.Tokens})
 }
 
 // Register godoc
@@ -68,13 +68,17 @@ func (c *AuthController) Register(ctx *gin.Context) {
 		ctx.JSON(http.StatusBadRequest, gin.H{"error": err.Error()})
 		return
 	}
-
-	if err := c.service.Register(&userDTO); err != nil {
+	if userDTO.Email == " " || userDTO.Name == " " || userDTO.Password == " " {
+		ctx.JSON(http.StatusBadRequest, gin.H{"error": "Bad Request"})
+		return
+	}
+	authUserResponse, err := c.service.Register(&userDTO)
+	if err != nil {
 		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err.Error()})
 		return
 	}
 
-	ctx.JSON(http.StatusCreated, gin.H{"message": "User registered"})
+	ctx.JSON(http.StatusCreated, gin.H{"user": authUserResponse.User, "tokens": authUserResponse.Tokens})
 }
 
 // RefreshToken godoc
@@ -111,11 +115,11 @@ func (c *AuthController) RefreshToken(ctx *gin.Context) {
 		return
 	}
 
-	ctx.JSON(http.StatusOK, gin.H{"tokens": refresh_token})
+	ctx.JSON(http.StatusOK, gin.H{"access": &refresh_token.Access, "refresh": &refresh_token.Refresh})
 }
 
 func (c *AuthController) SetupAuthRoutes(router *gin.RouterGroup) {
 	router.POST("/register", c.Register)
 	router.POST("/login", c.Login)
-	router.POST("/refresh-token", c.RefreshToken)
+	router.POST("/refresh", c.RefreshToken)
 }
