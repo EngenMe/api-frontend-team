@@ -29,20 +29,20 @@ func NewUserController(service service.UserService) *UserController {
 // @Router /user/{email} [get]
 // @Security ApiKeyAuth
 // @Security Bearer
-func (c *UserController) GetUser(ctx *gin.Context) {
-	email := ctx.Param("email")
-	user, err := c.service.GetUserByEmail(email)
-	if err != nil {
-		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
-		return
-	}
+// func (c *UserController) GetUser(ctx *gin.Context) {
+// 	email := ctx.Param("email")
+// 	user, err := c.service.GetUserByEmail(email)
+// 	if err != nil {
+// 		ctx.JSON(http.StatusNotFound, gin.H{"error": "User not found"})
+// 		return
+// 	}
 
-	ctx.JSON(
-		http.StatusOK, dto.GetUserResponse{
-			Email: user.Email,
-		},
-	)
-}
+// 	ctx.JSON(
+// 		http.StatusOK, dto.GetUserResponse{
+// 			Email: user.Email,
+// 		},
+// 	)
+// }
 
 // @Summary Get user profile
 // @Description Get user profile
@@ -160,7 +160,7 @@ func (c *UserController) DeleteUser(ctx *gin.Context) {
 }
 
 func (c *UserController) SetupUserRoutes(router *gin.RouterGroup) {
-	router.GET("/:email", c.GetUser)
+	// router.GET("/:email", c.GetUser)
 	router.GET("/me", c.GetProfile)
 	router.PUT("/me", c.UpdateUser)
 	router.DELETE("/me", c.DeleteUser)

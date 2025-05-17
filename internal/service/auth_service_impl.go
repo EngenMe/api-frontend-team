@@ -21,19 +21,17 @@ func NewAuthService(repo repository.UserRepository, tokenRepo repository.TokenRe
 	return &authService{repo: repo, tokenRepo: tokenRepo}
 }
 
-func (s *authService) Login(dtoUser *dto.LoginRequest) (dto.RefreshTokenResonse, error) {
-
-	var refresh_token dto.RefreshTokenResonse
-
+func (s *authService) Login(dtoUser *dto.LoginRequest) (dto.AuthUserResponse, error) {
+	var authUserResponse dto.AuthUserResponse
 	// Check if user exists
 	user, err := s.repo.FindByEmail(dtoUser.Email)
 	if err != nil {
-		return refresh_token, err
+		return authUserResponse, err
 	}
 
 	// Check password
 	if !utils.CheckPasswordHash(dtoUser.Password, user.Password) {
-		return refresh_token, err
+		return authUserResponse, err
 	}
 
 	userIDStr := strconv.FormatUint(uint64(user.ID), 10)
@@ -42,7 +40,7 @@ func (s *authService) Login(dtoUser *dto.LoginRequest) (dto.RefreshTokenResonse,
 
 	refresh_token_res, err := refreshTokens(userIDStr, user.Email)
 	if err != nil {
-		return refresh_token, err
+		return authUserResponse, err
 	}
 
 	tokenModel, err := s.tokenRepo.FindTokenByUserId(userIDStr)
@@ -54,41 +52,65 @@ func (s *authService) Login(dtoUser *dto.LoginRequest) (dto.RefreshTokenResonse,
 		}
 		err = s.tokenRepo.CreateToken(tokenModel)
 		if err != nil {
-			return refresh_token, err
+			return authUserResponse, err
 		}
 	} else if err != nil {
-		return refresh_token, err
+		return authUserResponse, err
 	} else {
 		fmt.Println("Updating existing token record")
 		err = s.tokenRepo.UpdateTokenByuserId(userIDStr, refresh_token_res.Refresh.Token)
 		if err != nil {
-			return refresh_token, err
+			return authUserResponse, err
 		}
 	}
 
-	return refresh_token_res, nil
+	authUserResponse.Tokens = refresh_token_res
+	authUserResponse.User = dto.User{
+		Id:    userIDStr,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+	return authUserResponse, nil
 }
 
-func (s *authService) Register(dto *dto.RegisterRequest) error {
-	// Check if user already exists
-	existingUser, err := s.repo.FindByEmail(dto.Email)
+func (s *authService) Register(userDto *dto.RegisterRequest) (dto.AuthUserResponse, error) {
+
+	var authUserResponse dto.AuthUserResponse
+
+	existingUser, err := s.repo.FindByEmail(userDto.Email)
 	if err == nil && existingUser != nil {
-		return errors.New("user already exists")
+		return authUserResponse, errors.New("user already exists")
 	}
-	hPassword, err := utils.HashPassword(dto.Password)
+	hPassword, err := utils.HashPassword(userDto.Password)
 	if err != nil {
-		return err
+		return authUserResponse, err
 	}
 
-	if !isEmailValid(dto.Email) {
-		return errors.New("invalid email format")
+	if !isEmailValid(userDto.Email) {
+		return authUserResponse, errors.New("invalid email format")
 	}
 
 	user := &model.User{
-		Email:    dto.Email,
+		Name:     userDto.Name,
+		Email:    userDto.Email,
 		Password: hPassword, // In production, hash the password
 	}
-	return s.repo.Create(user)
+	err = s.repo.Create(user)
+	if err != nil {
+		return authUserResponse, errors.New("can't create user")
+	}
+
+	createdUser, _ := s.repo.FindByEmail(user.Email)
+	userIdStr := strconv.FormatUint(uint64(createdUser.ID), 10)
+	tokens, _ := refreshTokens(userIdStr, createdUser.Email)
+
+	authUserResponse.Tokens = tokens
+	authUserResponse.User = dto.User{
+		Id:    userIdStr,
+		Name:  user.Name,
+		Email: user.Email,
+	}
+	return authUserResponse, nil
 }
 
 func (s *authService) RefreshToken(userID string, refreshToken string) (dto.RefreshTokenResonse, error) {

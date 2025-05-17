@@ -10,6 +10,7 @@ import (
 	"github.com/EngenMe/api-frontend-team/internal/repository"
 	"github.com/EngenMe/api-frontend-team/internal/service"
 	"github.com/EngenMe/api-frontend-team/pkg/db"
+	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
 	swaggerFiles "github.com/swaggo/files"
@@ -40,6 +41,7 @@ func main() {
 
 	router := gin.Default()
 
+	router.Use(cors.New(cors.Config{AllowOrigins: []string{"http://localhost:3000"}, AllowHeaders: []string{"Origin", "Content-Type", "Authorization"}, AllowCredentials: true}))
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
@@ -49,9 +51,9 @@ func main() {
 
 	apiV1Auth.POST("/register", authController.Register)
 	apiV1Auth.POST("/login", authController.Login)
-	apiV1Auth.POST("/refresh-token", authController.RefreshToken)
+	apiV1Auth.POST("/refresh", authController.RefreshToken)
 	apiV1User.GET("/me", userController.GetProfile)
-	apiV1User.GET("/:email", userController.GetUser)
+	// apiV1User.GET("/:email", userController.GetUser)
 	apiV1User.PUT("/update", userController.UpdateUser)
 	apiV1User.DELETE("/delete", userController.DeleteUser)
 
