@@ -26,19 +26,19 @@ func (s *authService) Login(dtoUser *dto.LoginRequest) (dto.AuthUserResponse, er
 	// Check if user exists
 	user, err := s.repo.FindByEmail(dtoUser.Email)
 	if err != nil {
-		return authUserResponse, err
+		return authUserResponse, errors.New("user not found")
 	}
 
 	// Check password
 	if !utils.CheckPasswordHash(dtoUser.Password, user.Password) {
-		return authUserResponse, err
+		return authUserResponse, errors.New("invalid credentials")
 	}
 
 	userIDStr := strconv.FormatUint(uint64(user.ID), 10)
 
 	// Generate JWT token
 
-	refresh_token_res, err := refreshTokens(userIDStr, user.Email)
+	refresh_token_res, err := generateTokens(userIDStr, user.Email)
 	if err != nil {
 		return authUserResponse, err
 	}
@@ -102,8 +102,13 @@ func (s *authService) Register(userDto *dto.RegisterRequest) (dto.AuthUserRespon
 
 	createdUser, _ := s.repo.FindByEmail(user.Email)
 	userIdStr := strconv.FormatUint(uint64(createdUser.ID), 10)
-	tokens, _ := refreshTokens(userIdStr, createdUser.Email)
+	tokens, _ := generateTokens(userIdStr, createdUser.Email)
 
+	tokenModel := &model.Token{
+		UserID:       userIdStr,
+		RefreshToken: tokens.Refresh.Token,
+	}
+	s.tokenRepo.CreateToken(tokenModel)
 	authUserResponse.Tokens = tokens
 	authUserResponse.User = dto.User{
 		Id:    userIdStr,
@@ -127,7 +132,7 @@ func (s *authService) RefreshToken(userID string, refreshToken string) (dto.Refr
 		return refresh_token, errors.New("user not found")
 	}
 
-	refresh_token_res, err := refreshTokens(userID, user.Email)
+	refresh_token_res, err := generateTokens(userID, user.Email)
 	if err != nil {
 		return refresh_token, err
 	}
@@ -140,7 +145,7 @@ func (s *authService) RefreshToken(userID string, refreshToken string) (dto.Refr
 	return refresh_token_res, nil
 }
 
-func refreshTokens(userId string, userEmail string) (dto.RefreshTokenResonse, error) {
+func generateTokens(userId string, userEmail string) (dto.RefreshTokenResonse, error) {
 	var refresh_token dto.RefreshTokenResonse
 
 	// Generate a new JWT token
