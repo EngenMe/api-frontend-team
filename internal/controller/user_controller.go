@@ -76,7 +76,9 @@ func (c *UserController) GetProfile(ctx *gin.Context) {
 
 	ctx.JSON(
 		http.StatusOK, dto.GetUserResponse{
+			Id:    user.Id,
 			Email: user.Email,
+			Name:  user.Name,
 		},
 	)
 }
@@ -121,6 +123,8 @@ func (c *UserController) UpdateUser(ctx *gin.Context) {
 
 	ctx.JSON(
 		http.StatusOK, dto.UpdateUserResponse{
+			Id:    user.Id,
+			Name:  user.Name,
 			Email: user.Email,
 		},
 	)

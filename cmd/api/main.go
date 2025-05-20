@@ -54,8 +54,8 @@ func main() {
 	apiV1Auth.POST("/refresh", authController.RefreshToken)
 	apiV1User.GET("/me", userController.GetProfile)
 	// apiV1User.GET("/:email", userController.GetUser)
-	apiV1User.PUT("/update", userController.UpdateUser)
-	apiV1User.DELETE("/delete", userController.DeleteUser)
+	apiV1User.PUT("/me", userController.UpdateUser)
+	apiV1User.DELETE("/me", userController.DeleteUser)
 
 	// userController.SetupUserRoutes(apiV1User)
 	// authController.SetupAuthRoutes(apiV1Auth)
