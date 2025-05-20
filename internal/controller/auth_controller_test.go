@@ -12,6 +12,7 @@ import (
 	"testing"
 
 	"github.com/EngenMe/api-frontend-team/internal/dto"
+	"github.com/EngenMe/api-frontend-team/internal/middleware"
 	"github.com/EngenMe/api-frontend-team/internal/model"
 	"github.com/EngenMe/api-frontend-team/internal/repository"
 	"github.com/EngenMe/api-frontend-team/internal/service"
@@ -38,10 +39,19 @@ func runTestServer() *httptest.Server {
 	userRepo := repository.NewUserRepository(dbConn)
 	tokenRepo := repository.NewTokenRepo(dbConn)
 	authService := service.NewAuthService(userRepo, tokenRepo)
+	userService := service.NewUserService(userRepo)
 	authController := NewAuthController(authService)
+	UserController := NewUserController(userService)
 
 	router := gin.Default()
-	authController.SetupAuthRoutes(router.Group("/api/v1/auth"))
+
+	apiV1Auth := router.Group("/api/v1/auth")
+	apiV1User := router.Group("/api/v1/user")
+
+	apiV1User.Use(middleware.AuthenticationMiddleware())
+
+	authController.SetupAuthRoutes((apiV1Auth))
+	UserController.SetupUserRoutes(apiV1User)
 
 	return httptest.NewServer(router)
 }
@@ -67,15 +77,17 @@ func Test_post_api_integration_test_register(t *testing.T) {
 		if resp.StatusCode != http.StatusCreated {
 			t.Errorf("expected status code 201, got %d", resp.StatusCode)
 		}
-		var responseBody map[string]interface{}
+		var responseBody dto.AuthUserResponse
 		json.NewDecoder(resp.Body).Decode(&responseBody)
 		var createdUser model.User
 		dbConn.First(&createdUser, "email = ?", user.Email)
-		assert.Equal(t, createdUser.Email, responseBody["user"].(map[string]interface{})["email"])
-		assert.Equal(t, user.Email, responseBody["user"].(map[string]interface{})["email"])
-		assert.NotEqual(t, user.Password, responseBody["user"].(map[string]interface{})["password"])
+		assert.Equal(t, createdUser.Email, responseBody.User.Email)
+		assert.Equal(t, user.Email, responseBody.User.Email)
 		assert.Equal(t, http.StatusCreated, resp.StatusCode)
-		tearDown(responseBody["user"].(map[string]interface{})["id"].(string))
+		assert.NotEmpty(t, responseBody.Tokens.Access)
+		assert.NotEmpty(t, responseBody.Tokens.Refresh)
+		tearDown(responseBody.User.Id)
+
 	})
 
 	t.Run("it should return 500 when user already exists", func(t *testing.T) {
