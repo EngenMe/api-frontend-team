@@ -10,6 +10,8 @@ import (
 	"github.com/EngenMe/api-frontend-team/internal/repository"
 	"github.com/EngenMe/api-frontend-team/pkg/jwt"
 	"github.com/EngenMe/api-frontend-team/pkg/utils"
+	"github.com/markbates/goth"
+	"gorm.io/gorm"
 )
 
 type authService struct {
@@ -100,9 +102,9 @@ func (s *authService) Register(userDto *dto.RegisterRequest) (dto.AuthUserRespon
 		return authUserResponse, errors.New("can't create user")
 	}
 
-	createdUser, _ := s.repo.FindByEmail(user.Email)
-	userIdStr := strconv.FormatUint(uint64(createdUser.ID), 10)
-	tokens, _ := generateTokens(userIdStr, createdUser.Email)
+	// createdUser, _ := s.repo.FindByEmail(user.Email)
+	userIdStr := strconv.FormatUint(uint64(user.ID), 10)
+	tokens, _ := generateTokens(userIdStr, user.Email)
 
 	tokenModel := &model.Token{
 		UserID:       userIdStr,
@@ -143,6 +145,52 @@ func (s *authService) RefreshToken(userID string, refreshToken string) (dto.Refr
 	}
 
 	return refresh_token_res, nil
+}
+
+func (s *authService) ProviderLogin(gothUser goth.User) (dto.AuthUserResponse, error) {
+	var userResp dto.AuthUserResponse
+	var userIdStr string
+	result, err := s.repo.FindByEmail(gothUser.Email)
+	if err != nil {
+		if errors.Is(err, gorm.ErrRecordNotFound) {
+			user := &model.User{
+				Name:       gothUser.Name,
+				Email:      gothUser.Email,
+				Provider:   gothUser.Provider,
+				ProviderID: gothUser.UserID,
+			}
+			err = s.repo.Create(user)
+			if err != nil {
+				return userResp, errors.New("can't create user")
+			}
+			userIdStr = strconv.FormatUint(uint64(user.ID), 10)
+		} else {
+			userIdStr = strconv.FormatUint(uint64(result.ID), 10)
+			if _, err := s.repo.UpdateUser(userIdStr, &model.User{
+				Name:       gothUser.Name,
+				Email:      gothUser.Email,
+				Provider:   gothUser.Provider,
+				ProviderID: gothUser.UserID,
+			}); err != nil {
+				return userResp, errors.New("can't update user")
+			}
+		}
+
+		tokens, _ := generateTokens(userIdStr, gothUser.Email)
+		tokenModel := &model.Token{
+			UserID:       userIdStr,
+			RefreshToken: tokens.Refresh.Token,
+		}
+		s.tokenRepo.CreateToken(tokenModel)
+		userResp.Tokens = tokens
+		userResp.User = dto.User{
+			Id:    userIdStr,
+			Name:  gothUser.Name,
+			Email: gothUser.Email,
+		}
+
+	}
+	return userResp, nil
 }
 
 func generateTokens(userId string, userEmail string) (dto.RefreshTokenResonse, error) {

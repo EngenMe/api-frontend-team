@@ -10,6 +10,7 @@ import (
 	"github.com/EngenMe/api-frontend-team/internal/repository"
 	"github.com/EngenMe/api-frontend-team/internal/service"
 	"github.com/EngenMe/api-frontend-team/pkg/db"
+	"github.com/EngenMe/api-frontend-team/pkg/utils"
 	"github.com/gin-contrib/cors"
 	"github.com/gin-gonic/gin"
 	"github.com/joho/godotenv"
@@ -31,6 +32,7 @@ func main() {
 	}
 
 	dbConn := db.InitDB()
+	utils.SetupSocialAuth()
 
 	userRepo := repository.NewUserRepository(dbConn)
 	tokenRepo := repository.NewTokenRepo(dbConn)
@@ -49,16 +51,16 @@ func main() {
 	apiV1User := router.Group("/api/v1/user")
 	apiV1User.Use(middleware.AuthenticationMiddleware())
 
-	apiV1Auth.POST("/register", authController.Register)
-	apiV1Auth.POST("/login", authController.Login)
-	apiV1Auth.POST("/refresh", authController.RefreshToken)
+	// apiV1Auth.POST("/register", authController.Register)
+	// apiV1Auth.POST("/login", authController.Login)
+	// apiV1Auth.POST("/refresh", authController.RefreshToken)
 	apiV1User.GET("/me", userController.GetProfile)
 	// apiV1User.GET("/:email", userController.GetUser)
 	apiV1User.PUT("/me", userController.UpdateUser)
 	apiV1User.DELETE("/me", userController.DeleteUser)
 
 	// userController.SetupUserRoutes(apiV1User)
-	// authController.SetupAuthRoutes(apiV1Auth)
+	authController.SetupAuthRoutes(apiV1Auth)
 
 	router.Run(os.Getenv("PORT"))
 }

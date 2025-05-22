@@ -1,8 +1,6 @@
 package repository
 
 import (
-	"fmt"
-
 	"github.com/EngenMe/api-frontend-team/internal/model"
 	"gorm.io/gorm"
 )
@@ -31,7 +29,6 @@ func (r *userRepository) FindByEmail(email string) (*model.User, error) {
 func (r *userRepository) GetById(id string) (*model.User, error) {
 	var user model.User
 	err := r.db.First(&user, id).Error
-	fmt.Println("User ID =============================>:", id)
 	if err != nil {
 		return nil, err
 	}

@@ -1,10 +1,13 @@
 package controller
 
 import (
+	"context"
 	"fmt"
+	"log"
 	"net/http"
 
 	"github.com/EngenMe/api-frontend-team/internal/dto"
+	"github.com/markbates/goth/gothic"
 
 	"github.com/EngenMe/api-frontend-team/internal/service"
 	"github.com/EngenMe/api-frontend-team/pkg/jwt"
@@ -118,8 +121,34 @@ func (c *AuthController) RefreshToken(ctx *gin.Context) {
 	ctx.JSON(http.StatusOK, gin.H{"access": &refresh_token.Access, "refresh": &refresh_token.Refresh})
 }
 
+func (c *AuthController) BeginAuthHandler(ctx *gin.Context) {
+	provider := ctx.Param("provider")
+	ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), "provider", provider))
+	log.Printf("Starting auth for provider: %s", provider)
+	gothic.BeginAuthHandler(ctx.Writer, ctx.Request)
+}
+
+func (c *AuthController) CallbackHandler(ctx *gin.Context) {
+	provider := ctx.Param("provider")
+	ctx.Request = ctx.Request.WithContext(context.WithValue(ctx.Request.Context(), "provider", provider))
+	user, err := gothic.CompleteUserAuth(ctx.Writer, ctx.Request)
+	if err != nil {
+		ctx.JSON(http.StatusUnauthorized, gin.H{"error": "Authentication failed"})
+		return
+	}
+
+	authUserResponse, err := c.service.ProviderLogin(user)
+	if err != nil {
+		ctx.JSON(http.StatusInternalServerError, gin.H{"error": err})
+		return
+	}
+	ctx.JSON(http.StatusCreated, gin.H{"user": authUserResponse.User, "tokens": authUserResponse.Tokens})
+}
+
 func (c *AuthController) SetupAuthRoutes(router *gin.RouterGroup) {
 	router.POST("/register", c.Register)
 	router.POST("/login", c.Login)
 	router.POST("/refresh", c.RefreshToken)
+	router.GET("/:provider", c.BeginAuthHandler)
+	router.GET("/:provider/callback", c.CallbackHandler)
 }
