@@ -4,7 +4,7 @@ import (
 	"log"
 	"os"
 
-	"github.com/EngenMe/api-frontend-team/cmd/api/docs"
+	"github.com/EngenMe/api-frontend-team/docs"
 	"github.com/EngenMe/api-frontend-team/internal/controller"
 	"github.com/EngenMe/api-frontend-team/internal/middleware"
 	"github.com/EngenMe/api-frontend-team/internal/repository"
@@ -41,7 +41,15 @@ func main() {
 
 	router := gin.Default()
 
-	router.Use(cors.New(cors.Config{AllowOrigins: []string{"http://localhost:3000"}, AllowHeaders: []string{"Origin", "Content-Type", "Authorization"}, AllowCredentials: true}))
+	router.Use(
+		cors.New(
+			cors.Config{
+				AllowOrigins:     []string{"http://localhost:3000"},
+				AllowHeaders:     []string{"Origin", "Content-Type", "Authorization"},
+				AllowCredentials: true,
+			},
+		),
+	)
 	docs.SwaggerInfo.BasePath = "/api/v1"
 	router.GET("/swagger/*any", ginSwagger.WrapHandler(swaggerFiles.Handler))
 
