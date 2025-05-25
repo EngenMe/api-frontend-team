@@ -273,61 +273,13 @@ const docTemplate = `{
                     }
                 }
             }
-        },
-        "/user/{email}": {
-            "get": {
-                "security": [
-                    {
-                        "ApiKeyAuth": []
-                    },
-                    {
-                        "Bearer": []
-                    }
-                ],
-                "description": "Get user by email",
-                "consumes": [
-                    "application/json"
-                ],
-                "produces": [
-                    "application/json"
-                ],
-                "tags": [
-                    "User"
-                ],
-                "summary": "Get user by email",
-                "parameters": [
-                    {
-                        "type": "string",
-                        "description": "User email",
-                        "name": "email",
-                        "in": "path",
-                        "required": true
-                    }
-                ],
-                "responses": {
-                    "200": {
-                        "description": "OK",
-                        "schema": {
-                            "$ref": "#/definitions/dto.GetUserResponse"
-                        }
-                    },
-                    "400": {
-                        "description": "Bad Request",
-                        "schema": {}
-                    },
-                    "404": {
-                        "description": "Not Found",
-                        "schema": {}
-                    }
-                }
-            }
         }
     },
     "definitions": {
         "controller.RefreshTokenRequest": {
             "type": "object",
             "properties": {
-                "refresh_token": {
+                "refreshToken": {
                     "type": "string"
                 }
             }
@@ -336,6 +288,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }
@@ -374,6 +332,9 @@ const docTemplate = `{
                 "email": {
                     "type": "string"
                 },
+                "name": {
+                    "type": "string"
+                },
                 "password": {
                     "type": "string"
                 }
@@ -393,10 +354,14 @@ const docTemplate = `{
         "dto.UpdateUserRequest": {
             "type": "object",
             "required": [
-                "email"
+                "email",
+                "name"
             ],
             "properties": {
                 "email": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 },
                 "password": {
@@ -408,6 +373,12 @@ const docTemplate = `{
             "type": "object",
             "properties": {
                 "email": {
+                    "type": "string"
+                },
+                "id": {
+                    "type": "string"
+                },
+                "name": {
                     "type": "string"
                 }
             }

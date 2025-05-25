@@ -2,12 +2,16 @@ basePath: /api/v1
 definitions:
   controller.RefreshTokenRequest:
     properties:
-      refresh_token:
+      refreshToken:
         type: string
     type: object
   dto.GetUserResponse:
     properties:
       email:
+        type: string
+      id:
+        type: string
+      name:
         type: string
     type: object
   dto.LoginRequest:
@@ -30,6 +34,8 @@ definitions:
     properties:
       email:
         type: string
+      name:
+        type: string
       password:
         type: string
     required:
@@ -46,14 +52,21 @@ definitions:
     properties:
       email:
         type: string
+      name:
+        type: string
       password:
         type: string
     required:
     - email
+    - name
     type: object
   dto.UpdateUserResponse:
     properties:
       email:
+        type: string
+      id:
+        type: string
+      name:
         type: string
     type: object
 host: localhost:8080
@@ -147,36 +160,6 @@ paths:
       summary: Register
       tags:
       - auth
-  /user/{email}:
-    get:
-      consumes:
-      - application/json
-      description: Get user by email
-      parameters:
-      - description: User email
-        in: path
-        name: email
-        required: true
-        type: string
-      produces:
-      - application/json
-      responses:
-        "200":
-          description: OK
-          schema:
-            $ref: '#/definitions/dto.GetUserResponse'
-        "400":
-          description: Bad Request
-          schema: {}
-        "404":
-          description: Not Found
-          schema: {}
-      security:
-      - ApiKeyAuth: []
-      - Bearer: []
-      summary: Get user by email
-      tags:
-      - User
   /user/me:
     delete:
       consumes:
